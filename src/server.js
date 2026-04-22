@@ -1,54 +1,60 @@
 import net from "node:net";
 import logger from "./utils/logger.js";
+import { handleCommand } from "./commands.js";
 import "dotenv/config";
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8080;
 let clients = [];
 
-// Crear Servidor TCP
 const server = net.createServer((socket) => {
-  const clientId = `${socket.remoteAddress}:${socket.remotePort}`;
+  socket.clientId = `${socket.remoteAddress}:${socket.remotePort}`;
+  socket.nickname = socket.clientId; // Por defecto el nick es su IP:Puerto
+
   clients.push(socket);
+  logger.info({ event: "CLIENT_CONNECTED", id: socket.clientId });
 
-  logger.info({ event: "CLIENT_CONNECTED", id: clientId });
+  socket.write(`Bienvenido al chat. Tu nick actual es: ${socket.nickname}\n`);
 
-  socket.write("Conectado al servidor de chat TCP.\n");
-
-  // Manejar mensajes entrantes
   socket.on("data", (data) => {
     const message = data.toString().trim();
     if (!message) return;
 
+    // Es un comando?
+    if (message.startsWith("/")) {
+      const shouldBroadcast = handleCommand(socket, message, clients);
+      if (!shouldBroadcast) return;
+    }
+
     // Broadcast
     clients.forEach((client) => {
       if (client !== socket && !client.destroyed) {
-        client.write(`[${clientId}]: ${message}\n`);
+        client.write(`[${socket.nickname}]: ${message}\n`);
       }
     });
 
     logger.info({
       event: "MESSAGE_SENT",
-      from: clientId,
+      from: socket.nickname,
       text: message,
     });
   });
 
-  // Remover cliente de la lista y loguear la desconexión
   const removeClient = (reason) => {
     if (clients.includes(socket)) {
       clients = clients.filter((c) => c !== socket);
-      logger.info({ event: "CLIENT_DISCONNECTED", id: clientId, reason });
+      logger.info({
+        event: "CLIENT_DISCONNECTED",
+        id: socket.nickname,
+        reason,
+      });
     }
   };
 
-  // Cerrar conexión de forma segura
   socket.on("end", () => removeClient("Normal closure"));
-
-  // Cerrar conexión por error
   socket.on("error", (err) => {
     logger.error({
       event: "SOCKET_ERROR",
-      id: clientId,
+      id: socket.nickname,
       message: err.message,
     });
     removeClient("Error closure");
@@ -56,5 +62,5 @@ const server = net.createServer((socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`>>> Servidor TCP activo en puerto ${PORT}`);
+  console.log(`Servidor TCP activo en puerto ${PORT}`);
 });

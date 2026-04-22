@@ -5,7 +5,7 @@ import "dotenv/config";
 const PORT = process.env.PORT;
 const HOST = process.env.HOST;
 
-// Configurar la interfaz de lectura de la terminal
+// Interfaz de lectura de la terminal
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -30,7 +30,7 @@ rl.on("line", (line) => {
   // Comando para desconexión limpia
   if (message === "/salir") {
     console.log("Desconectando de forma segura...");
-    client.end(); // (Normal closure)
+    client.end();
     return;
   }
 
@@ -40,13 +40,11 @@ rl.on("line", (line) => {
   rl.prompt();
 });
 
-// Manejar el cierre de conexión por parte del servidor
 client.on("end", () => {
   console.log("\nEl servidor ha cerrado la conexión.");
   process.exit(0);
 });
 
-// Manejar fallos de conexión o errores de red
 client.on("error", (err) => {
   console.error(`\nError en el cliente: ${err.message}`);
   process.exit(1);

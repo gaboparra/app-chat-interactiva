@@ -3,7 +3,8 @@ import logger from "./utils/logger.js";
 import { handleCommand } from "./commands.js";
 import "dotenv/config";
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
+const HOST = process.env.HOST;
 let clients = [];
 
 const server = net.createServer((socket) => {
@@ -61,6 +62,6 @@ const server = net.createServer((socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Servidor TCP activo en puerto ${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Servidor TCP activo en ${HOST}:${PORT}`);
 });

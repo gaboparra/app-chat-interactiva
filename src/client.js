@@ -17,13 +17,11 @@ const client = net.createConnection({ port: PORT, host: HOST }, () => {
   // console.log("Conectado exitosamente al servidor.");
 });
 
-// Manejar mensajes que llegan desde el servidor
 client.on("data", (data) => {
   console.log(`\n[SERVIDOR]: ${data.toString().trim()}`);
   rl.prompt();
 });
 
-// Manejar cada línea de texto que el usuario escribe
 rl.on("line", (line) => {
   const message = line.trim();
 

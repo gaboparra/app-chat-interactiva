@@ -1,0 +1,32 @@
+node src/master.js
+
+curl.exe localhost:3000/
+curl.exe localhost:3000/escribir-evidencia
+
+taskkill /PID 10644 /F
+
+## Ejercicio: "El Dilema del Recolector de Evidencia"
+
+1. Objetivo
+Lograr que el sistema sea capaz de recuperarse de un fallo, pero identificando por qué la estrategia de "revivir por revivir" puede generar inconsistencia de datos o pérdida de información en vuelo.
+
+2. Punto de Partida
+Deben utilizar una versión simplificada del Primer Ejemplo (Master con Telemetría).
+
+3. El Desafío (The Trigger)
+Deben modificar el Worker para que simule una operación de escritura de evidencia forense en un archivo (un log) que tarda 3 segundos en completarse.
+
+Instrucciones para los alumnos:
+
+- En el Worker, crea una ruta /escribir-evidencia.
+
+- Al recibir la petición, el Worker debe iniciar un setTimeout de 3 segundos que simule la escritura en disco.
+
+- La trampa: Agreguen una probabilidad del 50% de que, justo al terminar la escritura, el proceso ejecute un process.exit(1) (simulando un crash post-escritura).
+
+4. Tarea de Investigación en Caliente
+Mientras el Master revive automáticamente al Worker (gracias al código del Ejemplo 1), ejecuten el cliente de pruebas y observen lo siguiente:
+
+Escenario A: Si el Worker muere mientras está procesando la petición (antes de los 3 segundos), ¿qué recibe el cliente?
+
+Escenario B: Si el Master detecta que un Worker está consumiendo demasiada CPU y tú decides matarlo manualmente con kill -9, ¿qué pasa con las peticiones que estaban a mitad de camino?
